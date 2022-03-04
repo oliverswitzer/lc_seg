@@ -14,4 +14,5 @@ This is necessary due to the size of the example transcripts within the `test/fi
 If you have already cloned the repository, after installing git lfs, run:
 
 `$ git lfs fetch`
+
 `$ git lfs pull`
