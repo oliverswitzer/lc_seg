@@ -2,7 +2,7 @@ defmodule Test.LcSeg.MrtTranscriptParserTest do
   use ExUnit.Case
 
   alias Test.LcSeg.MrtTranscriptParser
-  alias LcSeg.TranscriptParser.TranscriptLine
+  alias LcSeg.TranscriptLine
 
   test "converts MRT files to transcripts correctly" do
     Path.wildcard("test/fixtures/transcripts/*.mrt")

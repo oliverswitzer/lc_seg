@@ -1,0 +1,40 @@
+# LcSeg
+
+## Section
+
+```elixir
+{:ok, transcript} =
+  Path.wildcard("test/fixtures/transcripts/*.mrt")
+  |> List.first()
+  |> Test.LcSeg.MrtTranscriptParser.parse()
+
+chains =
+  LcSeg.lexical_chains(transcript)
+  |> Enum.map(fn {tr, chains} -> {tr, Enum.filter(chains, &(&1.term != ""))} end)
+```
+
+```elixir
+window_size = 5
+step_size = 4
+
+scores =
+  chains
+  |> Enum.chunk_every(window_size, step_size, :discard)
+  |> Enum.map(fn window_chains -> Enum.flat_map(window_chains, &elem(&1, 1)) end)
+  |> IO.inspect(label: "********")
+  |> Enum.chunk_every(2, 1, :discard)
+  |> Enum.with_index()
+  |> Enum.map(fn {[window_1_chains, window_2_chains], i} ->
+    %{window_number: i, cohesion: LcSeg.lexical_cohesion_score(window_1_chains, window_2_chains)}
+  end)
+  |> Enum.drop_every(2)
+  |> Enum.drop_every(2)
+```
+
+```elixir
+VegaLite.new(width: 750, height: 400)
+|> VegaLite.data_from_values(scores)
+|> VegaLite.mark(:line, tooltip: true)
+|> VegaLite.encode_field(:x, "window_number")
+|> VegaLite.encode_field(:y, "cohesion")
+```
