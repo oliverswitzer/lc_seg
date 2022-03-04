@@ -3,15 +3,7 @@ defmodule LcSeg.TranscriptParser do
   Implement this module to format your conversations to a struct that LcSeg expects
   """
 
-  defmodule TranscriptLine do
-    @type t :: %{
-            text: String.t(),
-            start: float(),
-            end: float()
-          }
-    @enforce_keys [:text, :start, :end]
-    defstruct [:text, :start, :end]
-  end
+  alias LcSeg.TranscriptLine
 
   @callback parse(any()) :: {:ok, [TranscriptLine.t()]}
 end

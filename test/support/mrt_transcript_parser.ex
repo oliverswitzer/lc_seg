@@ -1,7 +1,7 @@
 defmodule Test.LcSeg.MrtTranscriptParser do
   @behaviour LcSeg.TranscriptParser
 
-  alias LcSeg.TranscriptParser.TranscriptLine
+  alias LcSeg.TranscriptLine
 
   @impl LcSeg.TranscriptParser
   def parse(mrt_file_path) do
