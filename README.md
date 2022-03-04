@@ -9,5 +9,9 @@ Before cloning, ensure you have [installed Git large file storage (lfs)](https:/
 
 `$ git lfs install`
 
-
 This is necessary due to the size of the example transcripts within the `test/fixtures/transcripts` directory
+
+If you have already cloned the repository, after installing git lfs, run:
+
+`$ git lfs fetch`
+`$ git lfs pull`
