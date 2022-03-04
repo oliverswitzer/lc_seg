@@ -13,5 +13,5 @@ defmodule LcSeg.TranscriptParser do
     defstruct [:text, :start, :end]
   end
 
-  @callback parse(any()) :: [TranscriptLine.t()]
+  @callback parse(any()) :: {:ok, [TranscriptLine.t()]}
 end

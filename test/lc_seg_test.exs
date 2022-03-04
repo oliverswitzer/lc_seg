@@ -4,7 +4,6 @@ defmodule LcSegTest do
 
   alias Test.LcSeg.MrtTranscriptParser
 
-  test "greets the world" do
-    transcript = MrtTranscriptParser.parse("test/fixtures/transcripts/Bdb001.mrt")
+  test "" do
   end
 end
