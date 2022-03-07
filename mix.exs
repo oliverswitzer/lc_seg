@@ -20,13 +20,14 @@ defmodule LcSeg.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:floki, "> 0.0.0", only: :test},
+      {:floki, "~> 0.32.0", only: :test},
+      {:uuid, "~> 1.1.8"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
   end

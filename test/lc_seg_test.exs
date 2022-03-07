@@ -22,9 +22,9 @@ defmodule LcSegTest do
       today_chain = %{term: "today", length: 2}
 
       assert [
-               %{%TranscriptLine{} => [^president_chain, ^today_chain]},
-               %{%TranscriptLine{} => [^president_chain, ^today_chain]},
-               %{%TranscriptLine{} => [^president_chain]}
+               {%TranscriptLine{}, [^president_chain, ^today_chain]},
+               {%TranscriptLine{}, [^president_chain, ^today_chain]},
+               {%TranscriptLine{}, [^president_chain]}
              ] = LcSeg.lexical_chains(transcript)
     end
   end
