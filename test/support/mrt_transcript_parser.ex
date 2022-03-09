@@ -7,9 +7,7 @@ defmodule Test.LcSeg.MrtTranscriptParser do
   def parse(mrt_file_path) do
     raw_transcript_xml = File.read!(mrt_file_path)
 
-    {:ok, parsed} =
-      Floki.parse_document(raw_transcript_xml)
-      |> IO.inspect()
+    {:ok, parsed} = Floki.parse_document(raw_transcript_xml)
 
     transcript_lines =
       parsed

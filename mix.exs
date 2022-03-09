@@ -26,6 +26,7 @@ defmodule LcSeg.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:euclid, "~> 0.2.5", only: :test},
       {:floki, "~> 0.32.0", only: :test},
       {:uuid, "~> 1.1.8"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
