@@ -8,24 +8,43 @@ defmodule LcSegTest do
   alias LcSeg
   alias LcSeg.DocumentCleaner
 
-  describe "lexical_chains/1" do
-    test "finds and scores all lexical chains in the given transcript" do
-      transcript =
-        [
-          "Hi President Johnson. How are those bananas?",
-          "The bananas are great! As President I enjoy them.",
-          "Great Mr. President",
-          "Johnson?"
-        ]
-        |> to_transcript_lines()
+  setup do
+    transcript =
+      [
+        "Hi President Johnson. How are those bananas?",
+        "The bananas are great! As President I enjoy them.",
+        "Great Mr. President",
+        "Johnson?"
+      ]
+      |> to_transcript_lines()
 
+    [transcript: transcript]
+  end
+
+  describe "lexical_cohesion_score/2" do
+    test "computes the cosine similarity for overlapping lexical chains between two transcript lines",
+         %{transcript: transcript} do
+      chains = LcSeg.lexical_chains(transcript)
+
+      line1_chains = Enum.at(chains, 0) |> elem(1)
+      line2_chains = Enum.at(chains, 1) |> elem(1)
+
+      score = LcSeg.lexical_cohesion_score(line1_chains, line2_chains) |> IO.inspect()
+      assert score > 0 && score < 1
+    end
+  end
+
+  describe "lexical_chains/1" do
+    test "finds and scores all lexical chains in the given transcript", %{transcript: transcript} do
       johnson_chain = %{term: DocumentCleaner.clean("Johnson"), length: 1}
       second_johnson_chain = %{term: DocumentCleaner.clean("Johnson"), length: 1}
       banana_chain = %{term: DocumentCleaner.clean("banana"), length: 2}
       president_chain = %{term: DocumentCleaner.clean("President"), length: 3}
       enjoy_chain = %{term: DocumentCleaner.clean("enjoy"), length: 1}
 
-      assert chains = LcSeg.lexical_chains(transcript)
+      assert chains =
+               LcSeg.lexical_chains(transcript)
+               |> IO.inspect()
 
       {first_line, first_chains} = Enum.at(chains, 0)
       assert %{text: "Hi President Johnson. How are those bananas?"} = first_line

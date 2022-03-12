@@ -40,7 +40,7 @@ defmodule LcSeg.LexicalChainsTest do
 
   describe "current_chains/1" do
     @tag preexisting_chain_for_term: "banana"
-    test "returns all chains in current_chain_ids on document chains", %{
+    test "returns all current chains that have not yet been terminated due to hiatus", %{
       document_chains: dc,
       chain: chain
     } do
@@ -51,7 +51,7 @@ defmodule LcSeg.LexicalChainsTest do
   end
 
   describe "update_hiatuses/2" do
-    test "will increment the hiatus count for any chains in current chains that do not occur in the term frequencies map",
+    test "will increment the hiatus count for any chains in current chains that do not occur in the passed in terms",
          %{
            document_chains: dc
          } do
@@ -59,12 +59,12 @@ defmodule LcSeg.LexicalChainsTest do
       assert {:ok, %Chain{hiatus: 0}, dc} = LexicalChains.find_or_create_chain(dc, "mango")
       assert {:ok, %Chain{hiatus: 0}, dc} = LexicalChains.find_or_create_chain(dc, "apple")
 
-      term_frequencies = %{
-        "banana" => 1,
-        "mango" => 2
-      }
+      terms = [
+        "banana",
+        "mango"
+      ]
 
-      updated_dc = LexicalChains.update_hiatuses(dc, term_frequencies)
+      updated_dc = LexicalChains.update_hiatuses(dc, terms)
 
       assert {:ok, %Chain{hiatus: 0}, _dc} =
                LexicalChains.find_or_create_chain(updated_dc, "banana")
@@ -84,7 +84,7 @@ defmodule LcSeg.LexicalChainsTest do
       assert {:ok, chain, _dc} = LexicalChains.find_or_create_chain(dc, "banana")
 
       assert chain.id
-      assert %Chain{term: "banana", length: 0, term_freq: 0, score: nil} = chain
+      assert %Chain{term: "banana", length: 0, score: nil} = chain
     end
 
     @tag preexisting_chain_for_term: "banana"
@@ -125,13 +125,13 @@ defmodule LcSeg.LexicalChainsTest do
 
   describe "increment_chain/3" do
     @tag preexisting_chain_for_term: "banana"
-    test "it increments the length of the chain by 1 and its term frequencies by passed in amount",
+    test "it increments the length of the chain by 1",
          %{document_chains: dc, chain: chain} do
-      assert %{term_freq: 0, length: 0} = chain
-      assert {:ok, chain, dc} = LexicalChains.increment_chain(dc, chain, 3)
+      assert %{length: 0} = chain
+      assert {:ok, chain, dc} = LexicalChains.increment_chain(dc, chain)
 
-      assert %{term_freq: 3, length: 1} = chain
-      assert %{term_freq: 3, length: 1} = dc.catalog[chain.id]
+      assert %{length: 1} = chain
+      assert %{length: 1} = dc.catalog[chain.id]
     end
 
     @tag preexisting_chain_for_term: "banana"
@@ -142,14 +142,14 @@ defmodule LcSeg.LexicalChainsTest do
       banana_chain = LexicalChains.current_chains(dc) |> List.first()
       assert banana_chain.hiatus == 1
 
-      assert {:ok, banana_chain, dc} = LexicalChains.increment_chain(dc, chain, 3)
+      assert {:ok, banana_chain, dc} = LexicalChains.increment_chain(dc, chain)
       assert %{hiatus: 0} = banana_chain
       assert %{hiatus: 0} = dc.catalog[banana_chain.id]
     end
 
     test "if chain does not exist, returns error", %{document_chains: dc} do
       chain = build(:chain, %{term: "pineapple"})
-      assert {:error, :chain_not_found} = LexicalChains.increment_chain(dc, chain, 3)
+      assert {:error, :chain_not_found} = LexicalChains.increment_chain(dc, chain)
     end
   end
 
@@ -161,7 +161,7 @@ defmodule LcSeg.LexicalChainsTest do
     } do
       assert chain.id in dc.current_chain_ids
 
-      {:ok, chain, dc} = LexicalChains.increment_chain(dc, chain, 2)
+      {:ok, chain, dc} = LexicalChains.increment_chain(dc, chain)
       assert {:ok, chain, dc} = LexicalChains.terminate_chain(dc, chain)
 
       refute chain.id in dc.current_chain_ids
@@ -173,41 +173,39 @@ defmodule LcSeg.LexicalChainsTest do
     end
   end
 
-  describe "score_all_chains/1" do
+  describe "score_chain/3" do
     @tag preexisting_chain_for_term: "banana"
-    test "should compute the score for all chains that have length greater than zero and term frequency",
-         %{
-           document_chains: dc,
-           chain: chain
-         } do
-      {:ok, chain2, dc} = LexicalChains.find_or_create_chain(dc, "pineapple")
+    test "should compute the score for the given chain with passed in term frequencies", %{
+      document_chains: dc,
+      chain: chain
+    } do
+      {:ok, chain, dc} = LexicalChains.increment_chain(dc, chain)
+      chain = LexicalChains.score_chain(dc, chain, 3)
 
-      {:ok, chain, dc} = LexicalChains.increment_chain(dc, chain, 3)
-      {:ok, chain2, dc} = LexicalChains.increment_chain(dc, chain2, 2)
-
-      {:ok, chain} = LexicalChains.get_chain(dc, chain.id)
-      assert is_nil(chain.score)
-      {:ok, chain2} = LexicalChains.get_chain(dc, chain2.id)
-      assert is_nil(chain.score)
-
-      dc = LexicalChains.score_all_chains(dc)
-
-      {:ok, chain} = LexicalChains.get_chain(dc, chain.id)
       refute is_nil(chain.score)
       assert chain.score > 0
-      {:ok, chain2} = LexicalChains.get_chain(dc, chain2.id)
-      refute is_nil(chain2.score)
-      assert chain2.score > 0
     end
-  end
 
-  @tag preexisting_chain_for_term: "banana"
-  test "any chain with length 0 will get assigned a score of zero", %{
-    document_chains: dc,
-    chain: chain
-  } do
-    dc = LexicalChains.score_all_chains(dc)
-    {:ok, chain} = LexicalChains.get_chain(dc, chain.id)
-    assert chain.score == 0
+    @tag preexisting_chain_for_term: "banana"
+    test "should score chain as 0 for any chain with length of zero", %{
+      document_chains: dc,
+      chain: chain
+    } do
+      chain = LexicalChains.score_chain(dc, chain, 3)
+
+      refute is_nil(chain.score)
+      assert chain.score == 0
+    end
+
+    @tag preexisting_chain_for_term: "banana"
+    test "should score chain as 0 if term frequencies is nil", %{
+      document_chains: dc,
+      chain: chain
+    } do
+      chain = LexicalChains.score_chain(dc, chain, nil)
+
+      refute is_nil(chain.score)
+      assert chain.score == 0
+    end
   end
 end
