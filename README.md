@@ -24,6 +24,7 @@ If you have already cloned the repository, after installing git lfs, run:
 First, install Livebook. Then:
 
 `$ cd lc_seg`
+
 `$ livebook server`
 
 Open `lc_seg.livemd` and run it using the Mix standalone option in livebook.
