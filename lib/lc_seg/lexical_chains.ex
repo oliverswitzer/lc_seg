@@ -34,7 +34,8 @@ defmodule LcSeg.LexicalChains do
       {:ok, chain} = get_chain(doc_chains, chain_id)
 
       if chain.term in terms do
-        # Do not update hiatus, since the term was seen
+        # TODO: We should add the hiatus to the length of this chain and then set the hiatus back to zero for this chain
+
         doc_chains
       else
         update_chain_catalog(doc_chains, %Chain{chain | hiatus: chain.hiatus + 1})

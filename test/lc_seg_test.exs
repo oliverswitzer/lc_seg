@@ -9,54 +9,92 @@ defmodule LcSegTest do
   alias LcSeg.DocumentCleaner
 
   setup do
-    transcript =
-      [
-        "Hi President Johnson. How are those bananas?",
-        "The bananas are great! As President I enjoy them.",
-        "Great Mr. President",
-        "Johnson?"
-      ]
-      |> to_transcript_lines()
+    transcript = [
+      "Hi President Johnson. How are those bananas?",
+      "The bananas are great! As President I enjoy them.",
+      "Great Mr. President",
+      "Johnson?"
+    ]
 
     [transcript: transcript]
   end
 
-  describe "cohesion_over_time" do
-    test "returns an array of timestamps" do
+  describe "cohesion_over_time/2" do
+    test "scores overlapping chains over a fixed size window of size 3 (k)", %{
+      transcript: transcript
+    } do
+      transcript =
+        [
+          "Hi President Johnson. How is that pineapple?",
+          "The pineapple is great!",
+          "Great Mr. President",
+          "Johnson?",
+          "Yes I'm here, what is it?",
+          "Oh, nothing, I thought you we're gone",
+          "No I'm here, just eating this pineapple"
+        ]
+        |> to_transcript_lines()
+        |> LcSeg.calculate_lexical_chains()
+
+      cohesion = LcSeg.cohesion_over_time(transcript, k: 3)
+
+      assert length(cohesion) == 3
+
+      transcript_3_start = Enum.at(transcript, 2).transcript.start
+      transcript_5_start = Enum.at(transcript, 4).transcript.start
+      transcript_7_start = Enum.at(transcript, 6).transcript.start
+
+      assert [
+               %{playback_time: ^transcript_3_start, cohesion: _cohesion_1},
+               %{playback_time: ^transcript_5_start, cohesion: _cohesion_2},
+               %{playback_time: ^transcript_7_start, cohesion: _cohesion_3}
+             ] = cohesion
+    end
+
+    test "scores overlapping chains over a fixed size window of 2 (k)", %{transcript: transcript} do
+      transcript =
+        transcript
+        |> to_transcript_lines()
+        |> LcSeg.calculate_lexical_chains()
+
+      cohesion = LcSeg.cohesion_over_time(transcript, k: 2)
+
+      assert length(cohesion) == 3
+
+      transcript_2_start = Enum.at(transcript, 1).transcript.start
+      transcript_3_start = Enum.at(transcript, 2).transcript.start
+      transcript_4_start = Enum.at(transcript, 3).transcript.start
+
+      assert [
+               %{playback_time: ^transcript_2_start, cohesion: _cohesion_1},
+               %{playback_time: ^transcript_3_start, cohesion: _cohesion_2},
+               %{playback_time: ^transcript_4_start, cohesion: _cohesion_3}
+             ] = cohesion
+
+      cohesion
+      |> Enum.each(fn %{cohesion: c} ->
+        assert c >= 0 && c <= 1
+      end)
     end
   end
 
-  describe "lexical_cohesion_score/2" do
-    test "computes the cosine similarity for overlapping lexical chains",
-         %{transcript: transcript} do
-      transcript = transcript ++ to_transcript_lines(["Johnson? Johnson?"])
-
-      chains = LcSeg.lexical_chains(transcript)
-
-      line1_chains =
-        Enum.at(chains, -1)
-        |> elem(1)
-
-      line2_chains =
-        Enum.at(chains, -2)
-        |> elem(1)
-
-      score = LcSeg.lexical_cohesion_score(line1_chains, line2_chains)
-      assert score >= 0 && score <= 1
-    end
-  end
-
-  describe "lexical_chains/1" do
+  describe "calculate_lexical_chains/1" do
     test "finds and scores all lexical chains in the given transcript", %{transcript: transcript} do
+      transcript = to_transcript_lines(transcript)
       johnson_chain = %{term: DocumentCleaner.clean("Johnson"), length: 1}
       second_johnson_chain = %{term: DocumentCleaner.clean("Johnson"), length: 1}
       banana_chain = %{term: DocumentCleaner.clean("banana"), length: 2}
       president_chain = %{term: DocumentCleaner.clean("President"), length: 3}
       enjoy_chain = %{term: DocumentCleaner.clean("enjoy"), length: 1}
 
-      assert chains = LcSeg.lexical_chains(transcript)
+      assert transcript = LcSeg.calculate_lexical_chains(transcript)
 
-      {first_line, first_chains} = Enum.at(chains, 0)
+      %{
+        transcript: first_line,
+        chains: first_chains,
+        term_frequencies: _first_line_frequencies
+      } = Enum.at(transcript, 0)
+
       assert %{text: "Hi President Johnson. How are those bananas?"} = first_line
 
       assert_eq(
@@ -65,7 +103,12 @@ defmodule LcSegTest do
         ignore_order: true
       )
 
-      {second_line, second_chains} = Enum.at(chains, 1)
+      %{
+        transcript: second_line,
+        chains: second_chains,
+        term_frequencies: _second_line_frequencies
+      } = Enum.at(transcript, 1)
+
       assert %{text: "The bananas are great! As President I enjoy them."} = second_line
 
       assert_eq(
@@ -74,7 +117,9 @@ defmodule LcSegTest do
         ignore_order: true
       )
 
-      {third_line, third_chains} = Enum.at(chains, 2)
+      %{transcript: third_line, chains: third_chains, term_frequencies: _third_line_frequencies} =
+        Enum.at(transcript, 2)
+
       assert %{text: "Great Mr. President"} = third_line
 
       # Johnson chain disappears in third line because it has not been seen for 1 transcript line, which is the default config specified by allowed_hiatus
@@ -84,7 +129,12 @@ defmodule LcSegTest do
         ignore_order: true
       )
 
-      {fourth_line, fourth_chains} = Enum.at(chains, 3)
+      %{
+        transcript: fourth_line,
+        chains: fourth_chains,
+        term_frequencies: _fourth_line_frequencies
+      } = Enum.at(transcript, 3)
+
       assert %{text: "Johnson?"} = fourth_line
 
       # Johnson chain reappears in fourth line with only a length of 1, since this is a new chain for Johnson.
@@ -93,13 +143,6 @@ defmodule LcSegTest do
         term_and_length(fourth_chains),
         ignore_order: true
       )
-
-      # All chains should have a score
-      assert [] =
-               chains
-               |> Enum.filter(fn {_tr_line, tr_chains} ->
-                 Enum.any?(tr_chains, &is_nil(&1.score))
-               end)
     end
 
     defp term_and_length(chains) do
@@ -110,6 +153,7 @@ defmodule LcSegTest do
 
   defp to_transcript_lines(raw_transcripts) do
     raw_transcripts
-    |> Enum.map(&build(:transcript_line, %{text: &1}))
+    |> Enum.with_index()
+    |> Enum.map(&build(:transcript_line, %{text: elem(&1, 0), start: elem(&1, 1)}))
   end
 end
