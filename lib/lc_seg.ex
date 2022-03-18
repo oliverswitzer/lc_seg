@@ -161,6 +161,7 @@ defmodule LcSeg do
         cleaned_text
         |> String.split(" ")
         |> Enum.frequencies()
+        |> Map.reject(fn {term, _count} -> term == " " end)
 
       %{transcript: tr, term_frequencies: term_frequencies}
     end)
