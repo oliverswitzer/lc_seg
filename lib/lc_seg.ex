@@ -8,6 +8,58 @@ defmodule LcSeg do
   alias LcSeg.LexicalChains.DocumentChains
   alias LcSeg.LexicalChains.Chain
   alias LcSeg.DocumentCleaner
+  @type topic_change_datapoint :: %{playback_time: float(), probability: float()}
+  @spec predicted_topic_changes([cohesion_datapoint()]) :: [topic_change_datapoint()]
+  def predicted_topic_changes(cohesion_over_time) do
+    %{maxima: local_maxima, minima: local_minima} =
+      cohesion_over_time
+      |> Enum.map(& &1.cohesion)
+      |> Measures.local_minima_and_maxima()
+
+    local_minima
+    |> Enum.map(fn minima ->
+      siblings = closest_siblings(minima, local_maxima)
+
+      if length(Enum.reject(siblings, &is_nil/1)) == 2 do
+        [left_maxima, right_maxima] = siblings
+        c = cohesion_over_time
+
+        probability =
+          topic_change_probability(
+            cohesion_at(c, left_maxima),
+            cohesion_at(c, right_maxima),
+            cohesion_at(c, minima)
+          )
+
+        %{
+          playback_time: Enum.at(c, minima) |> Map.get(:playback_time),
+          probability: probability
+        }
+      end
+    end)
+  end
+
+  defp topic_change_probability(left, right, minima) do
+    1 / 2 * (left + right - 2 * minima)
+  end
+
+  defp cohesion_at(cohesion_over_time, index) do
+    Enum.at(cohesion_over_time, index)
+    |> Map.get(:cohesion)
+  end
+
+  def closest_siblings(index, indices) do
+    right =
+      indices
+      |> Enum.find(&(&1 > index))
+
+    left =
+      indices
+      |> Enum.reverse()
+      |> Enum.find(&(&1 < index))
+
+    [left, right]
+  end
 
   @type cohesion_datapoint :: %{playback_time: float(), cohesion: float()}
   @type cohesion_over_time_options :: {:k, number()}

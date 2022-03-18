@@ -74,6 +74,16 @@ defmodule LcSeg.LexicalChainsTest do
 
       assert {:ok, %Chain{hiatus: 1}, _dc} =
                LexicalChains.find_or_create_chain(updated_dc, "apple")
+
+      second_terms = [
+        "apple"
+      ]
+
+      # Hiatus amount for "apple" chain gets added to its length when it appears in terms again
+      updated_dc = LexicalChains.update_hiatuses(updated_dc, second_terms)
+
+      assert {:ok, %Chain{hiatus: 0, length: 1}, _dc} =
+               LexicalChains.find_or_create_chain(updated_dc, "apple")
     end
   end
 

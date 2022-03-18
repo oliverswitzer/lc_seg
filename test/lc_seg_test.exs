@@ -19,6 +19,25 @@ defmodule LcSegTest do
     [transcript: transcript]
   end
 
+  describe "predicted_topic_changes/1" do
+    test "will return an array of predicted changes in conversation", %{transcript: transcript} do
+      transcript =
+        transcript
+        |> to_transcript_lines()
+
+      predicted_changes =
+        transcript
+        |> LcSeg.calculate_lexical_chains()
+        |> LcSeg.cohesion_over_time()
+        |> LcSeg.predicted_topic_changes()
+
+      assert length(predicted_changes) > 0
+      assert %{playback_time: _playback_time, probability: probability} = hd(predicted_changes)
+
+      assert probability >= 0 and probability <= 1
+    end
+  end
+
   describe "cohesion_over_time/2" do
     test "scores overlapping chains over a fixed size window of size 3 (k)", %{
       transcript: transcript
@@ -36,9 +55,9 @@ defmodule LcSegTest do
         |> to_transcript_lines()
         |> LcSeg.calculate_lexical_chains()
 
-      cohesion = LcSeg.cohesion_over_time(transcript, k: 3)
+      cohesion_over_time = LcSeg.cohesion_over_time(transcript, k: 3)
 
-      assert length(cohesion) == 3
+      assert length(cohesion_over_time) == 3
 
       transcript_3_start = Enum.at(transcript, 2).transcript.start
       transcript_5_start = Enum.at(transcript, 4).transcript.start
@@ -48,7 +67,7 @@ defmodule LcSegTest do
                %{playback_time: ^transcript_3_start, cohesion: _cohesion_1},
                %{playback_time: ^transcript_5_start, cohesion: _cohesion_2},
                %{playback_time: ^transcript_7_start, cohesion: _cohesion_3}
-             ] = cohesion
+             ] = cohesion_over_time
     end
 
     test "scores overlapping chains over a fixed size window of 2 (k)", %{transcript: transcript} do
@@ -57,9 +76,9 @@ defmodule LcSegTest do
         |> to_transcript_lines()
         |> LcSeg.calculate_lexical_chains()
 
-      cohesion = LcSeg.cohesion_over_time(transcript, k: 2)
+      cohesion_over_time = LcSeg.cohesion_over_time(transcript, k: 2)
 
-      assert length(cohesion) == 3
+      assert length(cohesion_over_time) == 3
 
       transcript_2_start = Enum.at(transcript, 1).transcript.start
       transcript_3_start = Enum.at(transcript, 2).transcript.start
@@ -69,9 +88,9 @@ defmodule LcSegTest do
                %{playback_time: ^transcript_2_start, cohesion: _cohesion_1},
                %{playback_time: ^transcript_3_start, cohesion: _cohesion_2},
                %{playback_time: ^transcript_4_start, cohesion: _cohesion_3}
-             ] = cohesion
+             ] = cohesion_over_time
 
-      cohesion
+      cohesion_over_time
       |> Enum.each(fn %{cohesion: c} ->
         assert c >= 0 && c <= 1
       end)

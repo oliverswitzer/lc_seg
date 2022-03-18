@@ -8,6 +8,7 @@
   "kino": {:hex, :kino, "0.5.2", "42716edc9e41f17325f81a30985f81366cc673dfa5c559f58b8d7f8560b62212", [:mix], [{:ecto, "~> 3.0", [hex: :ecto, repo: "hexpm", optional: true]}, {:vega_lite, "~> 0.1.0", [hex: :vega_lite, repo: "hexpm", optional: true]}], "hexpm", "0911fb49ea6a26b4ac2ee10a075d9a08f5c8e5b5b9bbd385b7fb06f811c9949b"},
   "similarity": {:hex, :similarity, "0.2.1", "9f46c27b43a79f0e8062db9accd8f01eb2eaf25bbea00ad9220f779b2a54796e", [:mix], [{:fast_ngram, "~> 1.0", [hex: :fast_ngram, repo: "hexpm", optional: false]}, {:siphash, "~> 3.0", [hex: :siphash, repo: "hexpm", optional: false]}], "hexpm", "2e1f14d91879fab67ba0b9c1dbf6246a8f7b8dddc272ce6707b5d34e340ee107"},
   "siphash": {:hex, :siphash, "3.2.0", "ec03fd4066259218c85e2a4b8eec4bb9663bc02b127ea8a0836db376ba73f2ed", [:make, :mix], [], "hexpm", "ba3810701c6e95637a745e186e8a4899087c3b079ba88fb8f33df054c3b0b7c3"},
+  "statistex": {:hex, :statistex, "1.0.0", "f3dc93f3c0c6c92e5f291704cf62b99b553253d7969e9a5fa713e5481cd858a5", [:mix], [], "hexpm", "ff9d8bee7035028ab4742ff52fc80a2aa35cece833cf5319009b52f1b5a86c27"},
   "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], [], "hexpm", "c790593b4c3b601f5dc2378baae7efaf5b3d73c4c6456ba85759905be792f2ac"},
   "vega_lite": {:hex, :vega_lite, "0.1.3", "38eeb47d66a881086d0e596b592e3aa75084115d00315c387716c131684f3513", [:mix], [], "hexpm", "ea6e8f951944144b15f26d0b33c255c2b1b553a65e3fffcd91784bfdc56ebb54"},
 }
