@@ -9,7 +9,7 @@ defmodule Measures do
       # what to return when index is out of bounds, it still returns the element 
       # at the negative index (ie toward the end of the array), rather than the 
       # default you specified.
-      prev = if i - 1 > 0, do: Enum.at(input, i - 1), else: nil
+      prev = if i - 1 >= 0, do: Enum.at(input, i - 1), else: nil
 
       case min_or_max(prev, num, next) do
         :min -> Map.put(acc, :minima, acc.minima ++ [i])
