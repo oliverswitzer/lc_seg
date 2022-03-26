@@ -19,7 +19,7 @@ defmodule LcSegTest do
     [transcript: transcript]
   end
 
-  describe "predicted_topic_changes/1" do
+  describe "topic_change_probabilities/1" do
     test "will return an array of predicted changes in conversation", %{transcript: transcript} do
       transcript =
         transcript
@@ -29,7 +29,7 @@ defmodule LcSegTest do
         transcript
         |> LcSeg.calculate_lexical_chains()
         |> LcSeg.cohesion_over_time()
-        |> LcSeg.predicted_topic_changes()
+        |> LcSeg.topic_change_probabilities()
 
       assert length(predicted_changes) > 0
       assert %{playback_time: _playback_time, probability: probability} = hd(predicted_changes)

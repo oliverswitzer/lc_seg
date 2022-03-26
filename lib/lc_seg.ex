@@ -8,9 +8,10 @@ defmodule LcSeg do
   alias LcSeg.LexicalChains.DocumentChains
   alias LcSeg.LexicalChains.Chain
   alias LcSeg.DocumentCleaner
+
   @type topic_change_datapoint :: %{playback_time: float(), probability: float()}
-  @spec predicted_topic_changes([cohesion_datapoint()]) :: [topic_change_datapoint()]
-  def predicted_topic_changes(cohesion_over_time) do
+  @spec topic_change_probabilities([cohesion_datapoint()]) :: [topic_change_datapoint()]
+  def topic_change_probabilities(cohesion_over_time) do
     %{maxima: local_maxima, minima: local_minima} =
       cohesion_over_time
       |> Enum.map(& &1.cohesion)
