@@ -1,40 +1,180 @@
 # LcSeg
 
-## Section
+## Define module to parse manually annotated topic changes
 
 ```elixir
-{:ok, transcript} =
-  Path.wildcard("test/fixtures/transcripts/*.mrt")
-  |> List.first()
-  |> Test.LcSeg.MrtTranscriptParser.parse()
+defmodule Test.LcSeg.TopicChange do
+  defstruct [:start, :end, :id]
+end
 
-chains =
-  LcSeg.lexical_chains(transcript)
-  |> Enum.map(fn {tr, chains} -> {tr, Enum.filter(chains, &(&1.term != ""))} end)
+defmodule Test.LcSeg.TopicChangeParser do
+  alias Test.LcSeg.TopicChange
+
+  def parse(topic_metadata_file_path) do
+    raw_topic_metadata = File.read!(topic_metadata_file_path)
+
+    {:ok, parsed} = Floki.parse_document(raw_topic_metadata)
+
+    transcript_lines =
+      parsed
+      |> Floki.find("top")
+      |> IO.inspect()
+      |> Enum.map(fn segment ->
+        time_range =
+          ["starttime", "endtime"]
+          |> Enum.map(&(hd(Floki.attribute(segment, &1)) |> String.to_float()))
+
+        topic_change_id = Floki.attribute(segment, "nite:id") |> hd()
+
+        %TopicChange{
+          id: topic_change_id,
+          start: Enum.at(time_range, 0),
+          end: Enum.at(time_range, 1)
+        }
+      end)
+
+    {:ok, transcript_lines}
+  end
+end
+
+transcript_files_with_annotations = [
+  "Bed003",
+  "Bed004",
+  "Bed011",
+  "Bmr001",
+  "Bmr002",
+  "Bmr005",
+  "Bmr007",
+  "Bmr008",
+  "Bmr009",
+  "Bmr010",
+  "Bmr011",
+  "Bmr012",
+  "Bmr013",
+  "Bmr014",
+  "Bmr018",
+  "Bmr021",
+  "Bmr022",
+  "Bmr024",
+  "Bmr025",
+  "Bmr026",
+  "Bmr027",
+  "Bmr029",
+  "Bro004",
+  "Bro007",
+  "Bro015"
+]
 ```
 
-```elixir
-window_size = 5
-step_size = 4
+## Parse all transcripts with annotations
 
-scores =
-  chains
-  |> Enum.chunk_every(window_size, step_size, :discard)
-  |> Enum.map(fn window_chains -> Enum.flat_map(window_chains, &elem(&1, 1)) end)
-  |> IO.inspect(label: "********")
-  |> Enum.chunk_every(2, 1, :discard)
-  |> Enum.with_index()
-  |> Enum.map(fn {[window_1_chains, window_2_chains], i} ->
-    %{window_number: i, cohesion: LcSeg.lexical_cohesion_score(window_1_chains, window_2_chains)}
+```elixir
+transcripts_with_changes =
+  transcript_files_with_annotations
+  |> Enum.map(fn file_name ->
+    {:ok, transcript} =
+      Test.LcSeg.MrtTranscriptParser.parse("test/fixtures/transcripts/#{file_name}.mrt")
+
+    {:ok, topic_changes} =
+      Test.LcSeg.TopicChangeParser.parse("test/fixtures/topic_changes/#{file_name}.tops.xml")
+
+    {file_name, %{transcript: transcript, annotated_topic_changes: topic_changes}}
   end)
-  |> Enum.drop_every(2)
-  |> Enum.drop_every(2)
+  |> Enum.into(%{})
+```
+
+## Define Graphing utilities
+
+```elixir
+defmodule Graphing do
+  def smooth(data_points, factor, x_field, y_field) do
+    data_points
+    |> Enum.chunk_every(factor, 1)
+    |> Enum.map(fn chunked_data_points ->
+      sum =
+        chunked_data_points
+        |> Enum.map(&Map.fetch!(&1, y_field))
+        |> Enum.sum()
+
+      %{}
+      |> Map.put(x_field, hd(chunked_data_points)[x_field])
+      |> Map.put(y_field, sum / length(chunked_data_points))
+    end)
+  end
+
+  def graph(data, type, x_field, y_field) do
+    VegaLite.new(width: 750, height: 400)
+    |> VegaLite.mark(type)
+    |> VegaLite.data_from_values(data)
+    |> VegaLite.encode_field(:x, x_field, scale: [type: :linear])
+    |> VegaLite.encode_field(:y, y_field, scale: [type: :linear])
+  end
+end
 ```
 
 ```elixir
-VegaLite.new(width: 750, height: 400)
-|> VegaLite.data_from_values(scores)
-|> VegaLite.mark(:line, tooltip: true)
-|> VegaLite.encode_field(:x, "window_number")
-|> VegaLite.encode_field(:y, "cohesion")
+graphables =
+  transcripts_with_changes
+  |> Enum.map(fn {file, %{transcript: transcript} = annotated_transcript} ->
+    cohesion_over_time =
+      transcript
+      |> LcSeg.calculate_lexical_chains(h: 1)
+      |> LcSeg.cohesion_over_time(k: 3)
+      |> Graphing.smooth(5, :playback_time, :cohesion)
+
+    probabilities =
+      cohesion_over_time
+      |> LcSeg.topic_change_probabilities()
+
+    annotated_transcript
+    |> Map.put(:cohesion_over_time, cohesion_over_time)
+    |> Map.put(:probabilities, probabilities)
+  end)
+```
+
+```elixir
+VegaLite.new(width: 750, height: 800)
+|> VegaLite.concat(
+  graphables
+  |> Enum.flat_map(fn %{
+                        cohesion_over_time: cohesion_over_time,
+                        probabilities: probabilities,
+                        annotated_topic_changes: annotated_topic_changes
+                      } ->
+    annotated_topic_changes =
+      annotated_topic_changes
+      |> Enum.map(&%{playback_time: &1.start, change: 1})
+
+    stats = Statistex.statistics(probabilities |> Enum.map(& &1.probability))
+
+    probabilities =
+      probabilities
+      # |> Enum.filter(fn %{probability: probability} ->
+      #   probability > stats.average - 0.05 * stats.standard_deviation
+      # end)
+      |> Enum.sort_by(&(-&1.probability))
+      |> Enum.take(5)
+
+    probabilities =
+      [%{playback_time: hd(cohesion_over_time).playback_time, probability: 1}] ++
+        probabilities ++
+        [%{playback_time: List.last(cohesion_over_time).playback_time, probability: 1}]
+
+    annotated_topic_changes =
+      [%{playback_time: hd(cohesion_over_time).playback_time, change: 0}] ++
+        annotated_topic_changes ++
+        [%{playback_time: List.last(cohesion_over_time).playback_time, change: 0}]
+
+    [
+      VegaLite.new(width: 750, height: 400)
+      |> VegaLite.data_from_values(cohesion_over_time)
+      |> VegaLite.mark(:line, tooltip: true)
+      |> VegaLite.encode_field(:x, "playback_time", scale: [type: :linear])
+      |> VegaLite.encode_field(:y, "cohesion", scale: [type: :linear]),
+      Graphing.graph(probabilities, :point, "playback_time", "probability"),
+      Graphing.graph(annotated_topic_changes, :point, "playback_time", "change")
+    ]
+  end),
+  :vertical
+)
 ```

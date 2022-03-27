@@ -1,6 +1,5 @@
 defmodule LcSegTest do
   use ExUnit.Case
-  doctest LcSeg
 
   import Euclid.Assertions
   import Test.LcSeg.Factory
@@ -19,29 +18,8 @@ defmodule LcSegTest do
     [transcript: transcript]
   end
 
-  describe "topic_change_probabilities/1" do
-    test "will return an array of predicted changes in conversation", %{transcript: transcript} do
-      transcript =
-        transcript
-        |> to_transcript_lines()
-
-      predicted_changes =
-        transcript
-        |> LcSeg.calculate_lexical_chains()
-        |> LcSeg.cohesion_over_time()
-        |> LcSeg.topic_change_probabilities()
-
-      assert length(predicted_changes) > 0
-      assert %{playback_time: _playback_time, probability: probability} = hd(predicted_changes)
-
-      assert probability >= 0 and probability <= 1
-    end
-  end
-
   describe "cohesion_over_time/2" do
-    test "scores overlapping chains over a fixed size window of size 3 (k)", %{
-      transcript: transcript
-    } do
+    test "scores overlapping chains over a fixed size window of size 3 (k)" do
       transcript =
         [
           "Hi President Johnson. How is that pineapple?",

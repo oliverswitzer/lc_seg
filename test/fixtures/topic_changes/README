@@ -1,0 +1,126 @@
+
+ICSI Meeting Topic Segmentation by Michel Galley et al.
+------------------------------------------------------
+
+Added to the corpus by: Jonathan Kilgour
+Date: 01/05/2004
+Authored by: Michel Galley, Kathleen McKeown, Eric Fosler-Lussier,
+ Hongyan Jing
+Quality: These should be considered 'reference segmentations' and
+ are based on segmentations from at least three judges.
+Ref:  Michel Galley, Kathleen McKeown, Eric Fosler-Lussier, Hongyan Jing.
+   Discourse Segmentation of Multi-party Conversation. 2003.
+   In the proceedings of the 41st Annual Meeting of the Association for
+   Computational Linguistics (ACL 03). Sapporo, Japan.
+
+The format of the original files is simple as are my translations. See
+the reference above and Michel Galley's own README which is appended at
+the end of this file.
+
+
+Using this data in NXT
+----------------------
+
+To use hotspot data alone, copy the XML files from this directory into
+your main ICSI meeting data directory. Then add this to the
+'interaction-codings' section of your metadata file (normally called
+ICSI-metadata.xml):
+
+            <!-- topic codings from Michel Galley et al. -->
+            <coding-file name="tops">
+                <time-aligned-layer name="galley-topic-layer">
+                    <code name="top">
+                        <attribute name="type" value-type="enumerated">
+                            <value>digits</value>
+                            <value>cut</value>
+                            <value>agenda</value>
+                        </attribute>
+                    </code>
+                </time-aligned-layer>
+            </coding-file>
+
+You will find that applications now load this data and the topic
+segmentation can be loaded.
+
+
+-------------------------------------------------------
+README from Michel Galley concerning this data
+-------------------------------------------------------
+
+Copyright Notice
+                
+   Copyright © 2003 by The Trustees of Columbia University in the City of
+   New York  
+   ________________________________________________________________________
+
+Introduction
+
+   This archive contains an annotation of the stucture of 25 meetings
+   taken from the ICSI Meeting corpus.
+   
+   ________________________________________________________________________
+
+Corpus Description
+
+   Each meeting transcription was segmented by at least three judges.
+   For their annotation, we built a reference segmentation (the procedure
+   is described in the next section). It consists of the following files:
+
+       3 "even deeper understanding" meetings meetings:
+       Bed003.ref  Bed004.ref  Bed011.ref
+
+       19 "meeting recorder" meetings:
+       Bmr001.ref  Bmr002.ref  Bmr005.ref  Bmr007.ref  Bmr008.ref  
+       Bmr009.ref  Bmr010.ref  Bmr011.ref  Bmr012.ref  Bmr013.ref  
+       Bmr014.ref  Bmr018.ref  Bmr021.ref  Bmr022.ref  Bmr024.ref  
+       Bmr025.ref  Bmr026.ref  Bmr027.ref  Bmr029.ref
+
+       3 "robustness" meetings:
+       Bro004.ref  Bro007.ref  Bro015.ref
+
+   In these files, each line corresponds to a segment, charterized by a 
+   start time and, optionally, by a tag representing special segments.
+   The optional tag is one of the following:
+
+   - cut    : pre-meeting chatting. This speech that isn't really part of
+              the meeting. 
+   - agenda : the agenda of the meeting is either decided or repeated.
+   - digits : digits are recorded.
+
+   There is no gap between segments, so the end time of a segment is
+   determined by the start time of the following one (for the last 
+   segment, by the end time of the meeting).
+
+   ________________________________________________________________________
+
+Reference Segmentation
+
+   We had to be careful in order to determine a reference segmentation based
+   on the segmentation of the 3+ jduges. The main issue is that annotators
+   rarely mark boundaries at the exact same position. Our idea was the
+   following: two boundaries found by two different annotators are considered
+   equivalent if they are separated by no more than 20 seconds (the
+   motivation for this is that the movement from one topic to the next is
+   generally not "clear-cut".) For each set of equivalent boundaries, we
+   determine if there is majority opinion (i.e. if they out number the number
+   of annotators who didn't find any boundary in the region). If there is a
+   majority, we add one of the boundaries to the reference segmentation (the
+   one that is closest to mean time). We had two judges to take a decision in
+   difficult cases (e.g. when a set of boudnaries spans more than 20 seconds.)
+
+   ________________________________________________________________________
+
+Reference
+
+   Michel Galley, Kathleen McKeown, Eric Fosler-Lussier, Hongyan Jing. 
+   Discourse Segmentation of Multi-party Conversation. 2003. 
+   In the proceedings of the 41st Annual Meeting of the Association for 
+   Computational Linguistics (ACL 03). Sapporo, Japan. 
+
+   ________________________________________________________________________
+
+Contact Information
+
+   Michel Galley
+   galley@cs.columbia.edu
+   http://www.cs.columbia.edu/~galley

@@ -1,6 +1,25 @@
 defmodule LcSeg do
   @moduledoc """
-  Documentation for `LcSeg`.
+  An elixir implementation of the LcSeg algorithim featured in Discourse 
+  Segmentation of Multi-Party Conversation (Galley 2003)
+
+  Use this module to calculate the Lexical Cohesion (ie similarity between windows of a conversation).
+  over the course of a conversation. 
+
+  The method computes the cosine simlarity between overlapping windows of lexical 
+  chains of fixed window size `k` (where k is measured in number of transcript lines.)
+
+  Lexical chains used in this paper are simple, and are built around term repitions 
+  of stemmed words.
+
+  Example usage:
+  iex> transcripts = YourTranscriptParser.parse()
+  [%TranscriptLine{text: "Hello.", start: 0.0, end: 21.2}, ...]
+
+  iex> cohesion = LcSeg.cohesion_over_time(transcripts, k: 3)
+  [%{playback_time: 0.0, cohesion: 0.8}, ...]
+  iex> LcSeg.topic_change_probabilities(cohesion)
+  [%{playback_time: 0.0, probability: 0.81}, ...]
   """
 
   alias LcSeg.LexicalChains
@@ -9,7 +28,14 @@ defmodule LcSeg do
   alias LcSeg.LexicalChains.Chain
   alias LcSeg.DocumentCleaner
 
+  @type cohesion_datapoint :: %{playback_time: float(), cohesion: float()}
   @type topic_change_datapoint :: %{playback_time: float(), probability: float()}
+
+  @doc """
+  Will return an array of topic change data points. Each data point is an approximation
+  of the probability that a topic change occured. This probability is approximated 
+  via computing the rate of change of cohesion at each minima in the cohesion over time.
+  """
   @spec topic_change_probabilities([cohesion_datapoint()]) :: [topic_change_datapoint()]
   def topic_change_probabilities(cohesion_over_time) do
     %{maxima: local_maxima, minima: local_minima} =
@@ -17,26 +43,38 @@ defmodule LcSeg do
       |> Enum.map(& &1.cohesion)
       |> Measures.local_minima_and_maxima()
 
-    local_minima
-    |> Enum.map(fn minima ->
-      siblings = closest_siblings(minima, local_maxima)
+    probabilities =
+      local_minima
+      |> Enum.map(fn minima ->
+        siblings = closest_siblings(minima, local_maxima)
 
-      if length(Enum.reject(siblings, &is_nil/1)) == 2 do
-        [left_maxima, right_maxima] = siblings
-        c = cohesion_over_time
+        if length(Enum.reject(siblings, &is_nil/1)) == 2 do
+          [left_maxima, right_maxima] = siblings
+          c = cohesion_over_time
 
-        probability =
-          topic_change_probability(
-            cohesion_at(c, left_maxima),
-            cohesion_at(c, right_maxima),
-            cohesion_at(c, minima)
-          )
+          probability =
+            topic_change_probability(
+              cohesion_at(c, left_maxima),
+              cohesion_at(c, right_maxima),
+              cohesion_at(c, minima)
+            )
 
-        %{
-          playback_time: Enum.at(c, minima) |> Map.get(:playback_time),
-          probability: probability
-        }
-      end
+          %{
+            playback_time: Enum.at(c, minima) |> Map.get(:playback_time),
+            probability: probability
+          }
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+
+    stats =
+      probabilities
+      |> Enum.map(& &1.probability)
+      |> Statistex.statistics()
+
+    probabilities
+    |> Enum.filter(fn p ->
+      p.probability > stats.average - 0.05 * stats.standard_deviation
     end)
   end
 
@@ -62,7 +100,14 @@ defmodule LcSeg do
     [left, right]
   end
 
-  @type cohesion_datapoint :: %{playback_time: float(), cohesion: float()}
+  @doc """
+  Returns an array of cohesion data points. Each data point represents the lexical 
+  "cohesion" between two adjacent windows of sized `k` in the transcript. `k` is
+  measured in distinct TranscriptLine's.
+
+  Cohesion is a measure of cosine similarity between the overlapping lexical chains
+  and their associated scores in the adjacent windows.
+  """
   @type cohesion_over_time_options :: {:k, number()}
   @spec cohesion_over_time(
           [TranscriptWithMetadata.t()],

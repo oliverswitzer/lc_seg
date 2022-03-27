@@ -1,0 +1,8 @@
+<nite:root xmlns:nite="http://nite.sourceforge.net/" nite:id="Bro004.origtopic">
+   <top nite:id="Bro004.top" starttime="0.000" endtime="76.254" type="cut" />
+   <top nite:id="Bro004.top1" starttime="76.254" endtime="95.581" type="agenda" />
+   <top nite:id="Bro004.top2" starttime="95.581" endtime="2682.583" />
+   <top nite:id="Bro004.top3" starttime="2682.583" endtime="3310.322" />
+   <top nite:id="Bro004.top4" starttime="3310.322" endtime="3756.290" />
+   <top nite:id="Bro004.top5" starttime="3756.290" endtime="4207.686" type="digits" />
+</nite:root>

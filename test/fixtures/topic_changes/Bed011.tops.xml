@@ -1,0 +1,10 @@
+<nite:root xmlns:nite="http://nite.sourceforge.net/" nite:id="Bed011.origtopic">
+   <top nite:id="Bed011.top" starttime="2.432" endtime="92.430" type="digits" />
+   <top nite:id="Bed011.top1" starttime="92.430" endtime="128.617" type="cut" />
+   <top nite:id="Bed011.top2" starttime="128.617" endtime="244.890" />
+   <top nite:id="Bed011.top3" starttime="244.890" endtime="1839.520" />
+   <top nite:id="Bed011.top4" starttime="1839.520" endtime="2637.980" />
+   <top nite:id="Bed011.top5" starttime="2637.980" endtime="2881.510" />
+   <top nite:id="Bed011.top6" starttime="2881.510" endtime="3134.560" />
+   <top nite:id="Bed011.top7" starttime="3134.560" endtime="3276.915" />
+</nite:root>

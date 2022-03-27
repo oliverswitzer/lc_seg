@@ -1,0 +1,10 @@
+<nite:root xmlns:nite="http://nite.sourceforge.net/" nite:id="Bmr026.origtopic">
+   <top nite:id="Bmr026.top" starttime="0.000" endtime="206.818" />
+   <top nite:id="Bmr026.top1" starttime="206.818" endtime="275.750" />
+   <top nite:id="Bmr026.top2" starttime="275.750" endtime="611.920" />
+   <top nite:id="Bmr026.top3" starttime="611.920" endtime="1128.520" />
+   <top nite:id="Bmr026.top4" starttime="1128.520" endtime="1459.580" />
+   <top nite:id="Bmr026.top5" starttime="1459.580" endtime="1792.299" />
+   <top nite:id="Bmr026.top6" starttime="1792.299" endtime="2486.115" />
+   <top nite:id="Bmr026.top7" starttime="2486.115" endtime="2692.958" type="digits" />
+</nite:root>

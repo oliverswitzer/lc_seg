@@ -1,0 +1,13 @@
+<nite:root xmlns:nite="http://nite.sourceforge.net/" nite:id="Bmr018.origtopic">
+   <top nite:id="Bmr018.top" starttime="0.000" endtime="99.948" type="cut" />
+   <top nite:id="Bmr018.top1" starttime="99.948" endtime="110.420" type="agenda" />
+   <top nite:id="Bmr018.top2" starttime="110.420" endtime="201.800" />
+   <top nite:id="Bmr018.top3" starttime="201.800" endtime="1203.410" />
+   <top nite:id="Bmr018.top4" starttime="1203.410" endtime="1321.641" />
+   <top nite:id="Bmr018.top5" starttime="1321.641" endtime="2203.710" />
+   <top nite:id="Bmr018.top6" starttime="2203.710" endtime="2357.350" />
+   <top nite:id="Bmr018.top7" starttime="2357.350" endtime="2522.680" />
+   <top nite:id="Bmr018.top8" starttime="2522.680" endtime="2655.250" />
+   <top nite:id="Bmr018.top9" starttime="2655.250" endtime="3364.332" />
+   <top nite:id="Bmr018.top10" starttime="3364.332" endtime="3421.928" type="digits" />
+</nite:root>

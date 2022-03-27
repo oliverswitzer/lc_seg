@@ -1,0 +1,7 @@
+<nite:root xmlns:nite="http://nite.sourceforge.net/" nite:id="Bmr009.origtopic">
+   <top nite:id="Bmr009.top" starttime="0.000" endtime="45.996" type="cut" />
+   <top nite:id="Bmr009.top1" starttime="45.996" endtime="1089.937" />
+   <top nite:id="Bmr009.top2" starttime="1089.937" endtime="2508.520" />
+   <top nite:id="Bmr009.top3" starttime="2508.520" endtime="2744.430" />
+   <top nite:id="Bmr009.top4" starttime="2744.430" endtime="2997.123" type="digits" />
+</nite:root>
