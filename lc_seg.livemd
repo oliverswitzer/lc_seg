@@ -145,7 +145,7 @@ VegaLite.new(width: 750, height: 800)
       annotated_topic_changes
       |> Enum.map(&%{playback_time: &1.start, change: 1})
 
-    stats = Statistex.statistics(probabilities |> Enum.map(& &1.probability))
+    # stats = Statistex.statistics(probabilities |> Enum.map(& &1.probability))
 
     probabilities =
       probabilities
@@ -177,4 +177,7 @@ VegaLite.new(width: 750, height: 800)
   end),
   :vertical
 )
+|> VegaLite.to_spec()
+|> Jason.encode!()
+|> IO.puts()
 ```
